@@ -1,17 +1,26 @@
 const mongoose = require("mongoose");
+const bcryptjs = require("bcryptjs");
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
-  name: String,
+  userName: String,
   email: String,
-  password: String
+  password: String,
 });
 
-userSchema.statics.findOrCreate = function(googleid){
-  const User = this;
-  User.findOne({oauthId}).then(user => {
-    if(!user)
-  })
-}
+userSchema.pre("save", function (next) {
+  const user = this;
+  if (user.isNew) {
+    bcryptjs.genSalt(10).then(function (salt) {
+      bcryptjs.hash(user.password, salt).then(function (encryptedpassword) {
+        user.password = encryptedpassword;
+        next();
+      });
+    });
+  } else {
+    next();
+  }
+});
 
 module.exports = mongoose.model("User", userSchema);
+
